@@ -1,7 +1,0 @@
-6
-1 ./testsT0/bin/childfaulter childfaulter
-4 ./testsT0/bin/childtime childtime 5 SSOO 31
-1 ./testsT0/bin/child child 
-4 ./testsT0/bin/childtime childtime 9 REDES 67
-1 ./testsT0/bin/child child 
-4 ./testsT0/bin/childtime childtime 2 SSOOyREDES 22
