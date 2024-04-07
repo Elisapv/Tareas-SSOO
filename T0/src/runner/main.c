@@ -1,122 +1,95 @@
-#include <stdio.h>	// FILE, fopen, fclose, etc.
-#include <stdlib.h> // malloc, calloc, free, etc
 #include "../file_manager/manager.h"
-#include <time.h>
-#include <unistd.h>
-#include <signal.h>
-#include <string.h>
-#include <wait.h>
-#include "runner.h"
+#include "./runner.h"
 
 
 int main(int argc, char const *argv[])
 {
-	struct timeval start, end;
+	signal(SIGINT, handle_sigint);
+	signal(SIGTSTP, handle_sigtstp);
 
-    // Obtener el tiempo de inicio
-    gettimeofday(&start, NULL);
-
-	signal(SIGTSTP, handler_sigint);
+	time_reached = false; // revisar
 
 	/*Lectura del input*/
-	//argc = número de lineas
+
+	//argc corresponde número de cosas en el comando que corremos
+	printf("argc: %d\n", argc);
 	char *file_name = (char *)argv[1];
+	char *file_output = (char *)argv[2];
 
 	InputFile *input_file = read_file(file_name);
 
+	printf("%s \n", file_output);
+	output_file = fopen(file_output, "w");
+	
+	// Amount y Max
+	int amount = atoi(argv[3]); // Cantidad maxima de procesos externos que pueden correr al mismo tiempo
+	int max = -1;
+	if (argc == 5) {
+		max = atoi(argv[4]);
+	}
+
+	printf("amount: %d, max: %d\n", amount, max);
+
+	// Alarma en el tiempo máximo de ejecución // funcionaría con el SIGINT
+	if (max > 0) {
+		alarm(max);
+	}
+
 	/*Mostramos el archivo de input en consola*/
-	// printf("Cantidad de lineas: %d\n", input_file->len);
+	N_process = input_file->len; // se guarda globalmente el numero de programadas
+	printf("Cantidad de lineas: %d\n", input_file->len);
+
+	// REPORTE (ARREGLOS PARA CADA COSA QUE NECESITAMOS DEL REPORTE DE LEN MAX_PROCESS o N° PROCESS)
+	childs = malloc(sizeof(int) * amount);
+	for (int i = 0; i < amount; i++) {
+		childs[i] = -1; // Inicializar el arreglo
+	}
+	cont_childs = 0; // partimos del proceso 0
+	max_childs = amount;
+
+	// Información para el output inicializada
+	p_path = malloc(sizeof(char*) * N_process); //path
+	for (int i = 0; i < N_process; i++) {p_path[i] = NULL;}
+	p_pids = malloc(sizeof(int) * N_process);
+	p_status = malloc(sizeof(int) * N_process);
+	actual_status = malloc(sizeof(char*) * N_process);
+	for (int i = 0; i < N_process; i++) { p_pids[i] = -1; p_status[i] = -1; actual_status[i] = "WAITING";}
+	start_time = malloc(sizeof(double) * N_process);
+	end_time = malloc(sizeof(double) * N_process);
+	for (int i = 0; i < N_process; i++) { p_pids[i] = 0; end_time[i] = 0;}
 
 	for (int i = 0; i < input_file->len; ++i)
 	{
-		
-		int argc = atoi(input_file->lines[i][0]); 	// Número de argumentos
-		printf("%d ", atoi(input_file->lines[i][0]));
-		printf("%s ", input_file->lines[i][1]);
+		printf("holi entre al for del main\n##########################\n");
+		int argc = atoi(input_file->lines[i][0]); 	// = n_argument	// Camiamos argc a la cantidad de argc del proceso.
+		printf("%d \n", atoi(input_file->lines[i][0])); 	// Número de argumentos
+		char instruction[200];
+		printf("%s ", input_file->lines[i][1]);			// Ruta Programa 
+		sprintf(instruction, "%s ",input_file->lines[i][1]);
 		for (int j = 2; j < argc + 2; ++j)
 		{
-			printf("%s ", input_file->lines[i][j]);
+			strcat(instruction, input_file->lines[i][j]);
+			strcat(instruction, " ");
+			printf("%s \n", input_file->lines[i][j]); 		// Argumentos
 		}
-
+		
 		printf("\n");
 
-		if (argc > 0) {  							// Comando normal para ejecutar un proceso
-			char **args = input_file->lines[i] + 1; // Por que + 1?
-			start_process(file_name, args);
-		} else if (argc == -1 && strcmp(input_file->lines[i][1], "wait_all") == 0) {
-			continue;
-			// int timeout = atoi(input_file->lines[i][2]);
-        	// time_t start_time = time(NULL);
 
-        	// while ((time(NULL) - start_time) < timeout) {
-            // 	int status;
-            // 	pid_t done = wait(&status);
-            // 	if (done == -1) {
-            //     	if (errno == ECHILD) {  // No más procesos hijos
-            //         	break;
-            //     	}
-            // 	} else {
-            //     	// Aquí podrías actualizar la información del proceso que ha terminado, si es necesario
-			// 		continue;
-            // 	}
-        	// }
-		}
+		printf("AAAAAAAAAAAAAAAAAAAAA\n");
+		handle_process(argc, instruction, i);
+		// número de argumentos de proceso, path+argumentos, indice del proceso.
+		printf("childs_count: %d\n", cont_childs);
+
 	}
 
-	// Esperar a que todos los procesos terminen
-    int status;
-    while (wait(&status) > 0); // Bucle para esperar a todos los procesos hijos
+	// ESCRIBIR EN EL OUTPUT
+	generete_output();
 
-    // Obtener el tiempo de finalización
-    gettimeofday(&end, NULL);
+	// LIBERAR LA MEMORIA
+	free_memory();
 
-    // Calcular la duración total en segundos
-    double elapsed = (end.tv_sec - start.tv_sec) + ((end.tv_usec - start.tv_usec) / 1000000.0);
-    printf("Tiempo total de ejecución: %.2f segundos\n", elapsed);
-
-	// Escribimos archivo csv
-	const char *csvFileName = "output.csv";
-
-	// Abre el archivo CSV para escritura
-    FILE *csvFile = fopen(csvFileName, "w");
-    if (csvFile == NULL) {
-        perror("No se pudo abrir el archivo CSV");
-        return 1;
-    }
-
-    // Escribe los nombres de los procesos en el archivo CSV
-    for (int i = 0; i < input_file->len; i++) {
-        fprintf(csvFile, "%f", elapsed);
-		// fprintf(csvFile, "%d,", ProcessInfo[i]->pid); 
-    }
-	// Cerrar archivo csv
-	fclose(csvFile);
+	printf("\nThe program has finished\n");
 
 	input_file_destroy(input_file);
 }
-
-
-// for (int i = 0; i < input_file->len; ++i) {
-//     int num_args = atoi(input_file->lines[i][0]);  // número de argumentos
-
-//     if (num_args > 0) {  // Comando normal para ejecutar un proceso
-//         char **args = input_file->lines[i] + 1;
-//         start_process(args[0], args);
-//     } else if (num_args == -1 && strcmp(input_file->lines[i][1], "wait_all") == 0) {
-//         int timeout = atoi(input_file->lines[i][2]);
-//         time_t start_time = time(NULL);
-
-//         while ((time(NULL) - start_time) < timeout) {
-//             int status;
-//             pid_t done = wait(&status);
-//             if (done == -1) {
-//                 if (errno == ECHILD) {  // No más procesos hijos
-//                     break;
-//                 }
-//             } else {
-//                 // Aquí podrías actualizar la información del proceso que ha terminado, si es necesario
-//             }
-//         }
-//     }
-// }
-
