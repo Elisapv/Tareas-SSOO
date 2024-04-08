@@ -19,7 +19,7 @@ int* childs;
 int cont_childs;
 int max_childs;
 char** arguments;
-bool time_reached; // tiempo alcanzado
+// bool time_reached; // tiempo alcanzado
 FILE* output_file;
 
 

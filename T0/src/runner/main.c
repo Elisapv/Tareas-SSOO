@@ -7,7 +7,7 @@ int main(int argc, char const *argv[])
 	signal(SIGINT, handle_sigint);
 	signal(SIGTSTP, handle_sigtstp);
 
-	time_reached = false; // revisar
+	// time_reached = false; // revisar
 
 	/*Lectura del input*/
 
