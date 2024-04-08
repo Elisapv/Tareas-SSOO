@@ -43,11 +43,12 @@ void wait_child();
 void wait_all_childs(int timeout);
 
 // Señales
-void handle_sigint(int signal);
+// void handle_sigint(int signal);
+void handle_sigalrm(int signal);
 void handle_sigtstp(int signal);
 
 // Generar output
-// double GetTime();
+double GetTime();
 void init_output(int index, char* path, int pid);
 void end_output(int pid, int status);
 void generete_output();

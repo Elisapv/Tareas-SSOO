@@ -4,7 +4,8 @@
 
 int main(int argc, char const *argv[])
 {
-	signal(SIGINT, handle_sigint);
+	// signal(SIGINT, handle_sigint);
+	signal(SIGALRM, handle_sigalrm);
 	signal(SIGTSTP, handle_sigtstp);
 
 	// time_reached = false; // revisar
@@ -28,10 +29,12 @@ int main(int argc, char const *argv[])
 		max = atoi(argv[4]);
 	}
 
-	printf("amount: %d, max: %d\n", amount, max);
+	// printf("amount: %d, max: %d\n", amount, max);
 
 	// Alarma en el tiempo máximo de ejecución // funcionaría con el SIGINT
+	// Este tiempo se debería reiniciar con cada proceso o no?
 	if (max > 0) {
+		signal(SIGALRM, handle_sigalrm);
 		alarm(max);
 	}
 
@@ -60,7 +63,6 @@ int main(int argc, char const *argv[])
 
 	for (int i = 0; i < input_file->len; ++i)
 	{
-		printf("holi entre al for del main\n##########################\n");
 		int argc = atoi(input_file->lines[i][0]); 	// = n_argument	// Camiamos argc a la cantidad de argc del proceso.
 		printf("%d \n", atoi(input_file->lines[i][0])); 	// Número de argumentos
 		char instruction[200];
@@ -72,11 +74,9 @@ int main(int argc, char const *argv[])
 			strcat(instruction, " ");
 			printf("%s \n", input_file->lines[i][j]); 		// Argumentos
 		}
-		
-		printf("\n");
+		printf("########################\n");
+		// printf("\n");
 
-
-		printf("AAAAAAAAAAAAAAAAAAAAA\n");
 		handle_process(argc, instruction, i);
 		// número de argumentos de proceso, path+argumentos, indice del proceso.
 		printf("childs_count: %d\n", cont_childs);
