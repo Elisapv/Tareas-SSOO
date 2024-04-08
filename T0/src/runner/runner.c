@@ -3,8 +3,6 @@
 
 
 void handle_process(int n_argument, char* path, int index){
-    printf("\nENTRE A HANDLE_PROCESS\n");
-    printf("\n");
     // número de argumentos de proceso, path+argumentos, indice del proceso.
     if (n_argument == -1) {
         // WAIT_ALL
@@ -23,7 +21,8 @@ void handle_process(int n_argument, char* path, int index){
 
     }
 
-    else if (cont_childs <= max_childs) {
+    else if (cont_childs < max_childs) {
+        printf("ELSE IF\n");
         // Iniciamos el proecos externo
     
         arguments = malloc(sizeof(char*) * (n_argument + 2));
@@ -40,8 +39,8 @@ void handle_process(int n_argument, char* path, int index){
         printf("\n");
 
         start_time[index] = GetTime();
-
         int pid = fork();
+
         if (pid == -1) {
             perror("fork");
             exit(1);
@@ -49,34 +48,19 @@ void handle_process(int n_argument, char* path, int index){
             // Hijo
             printf("\nENTRE A HIJO\n");
             printf("\n");
-            // execv(arguments[0], arguments); // 
             execvp(arguments[0], args);
             actual_status[index] = "STARTED";
             printf("Argumeto: %s, Argumnets: %s\n", arguments[0], *args);
             printf("Error ejecutando proceso %s\n", path);
-            perror(execvp);
-
-            // free(arguments);
-            // free(args);
+            // perror(execvp);
         } else {
             // Parent
             printf("ENTRE A PARENT\n");
             init_output(index, arguments[0], pid);
-            // free(arguments);
-            // free(args);
-
-            int indice = available_space();
-            if (indice == -1) {
-                printf("No hay espacio disponible\n");
-            } else {
-                printf("ENTRE AL LISTADO DE PROCESOS...\n");
-                childs[indice] = pid;
-                // printf("childs pid: %d\n", childs[indice]);
-                cont_childs++;
-            }
+            childs[index] = pid;
+            cont_childs++;
             printf("SALI DE PARENT\n");
             printf("\n");
-
         }
 
         free(args);
@@ -90,21 +74,25 @@ void handle_process(int n_argument, char* path, int index){
 }
 
 // WAIT
+
 void wait_child() {
-    // int status = p_status[index];
+    printf("\nENTRE A WAIT_CHILD\n");
     int status;
     for (int index = 0; index < N_process; index++) {
-        pid_t child_pid = waitpid(p_pids[index], &status, WNOHANG);
-        if (strcmp(actual_status[index], "FINISHED") != 0 && child_pid > 0){
-            int exit_status = WEXITSTATUS(status);
-            p_status[index] = exit_status;
-            actual_status[index] = "FINISHED";
-            end_time[index] = GetTime();
+        if (p_pids[index] > 0 && strcmp(actual_status[index], "FINISHED") != 0) {
+            pid_t child_pid = waitpid(p_pids[index], &status, WNOHANG);
+            if (child_pid > 0) {
+                end_time[index] = GetTime();
+                if (WIFEXITED(status)){
+                    p_status[index] = WEXITSTATUS(status);
+                } else if (WIFSIGNALED(status)) {
+                    p_status[index] = WTERMSIG(status);
+                }
+                actual_status[index] = "FINISHED";
+                cont_childs--;
+            }
         }
-        
     }
-    printf("HOLA EL PROECESO ENTRO A WAIT CHILD\n");
-    cont_childs--;
 }
 
 void wait_all_childs(int timeout) {
@@ -115,7 +103,7 @@ void wait_all_childs(int timeout) {
 
     while (cont_childs > 0 && elapsedTime < timeout) {
         for (int i = 0; i < max_childs; i++) {
-            if (childs[i] != -1) {
+            if (childs[i] != -1 && strcmp(actual_status[i], "FINISHED") != 0) {
                 pid_t child_pid = waitpid(childs[i], &status, WNOHANG);
                 if (child_pid > 0) {
                     // Proceso hijo terminó
@@ -133,7 +121,7 @@ void wait_all_childs(int timeout) {
         }
 
         elapsedTime = GetTime() - startTime;
-        sleep(1); // Pausa breve para evitar sobrecargar el CPU ESTO ME SUENA RARO...
+        // sleep(1); // Pausa breve para evitar sobrecargar el CPU ESTO ME SUENA RARO...
     }
 
     if (elapsedTime >= timeout) {
@@ -141,7 +129,7 @@ void wait_all_childs(int timeout) {
         for (int i = 0; i < max_childs; i++) {
             if (childs[i] != -1) {
                 kill(childs[i], SIGKILL);
-                waitpid(childs[i], &status, 0); // Asegúrate de esperar al proceso para evitar zombies
+                waitpid(childs[i], &status, 0);
                 end_output(childs[i], WTERMSIG(status));
                 childs[i] = -1;
                 cont_childs--;
@@ -176,23 +164,7 @@ void handle_sigalrm(int signal) {
     }
 }
 
-// void handle_sigint(int signal) {
-//     printf("SE TERMINO EL TIEMPO MAX\n");
-//     sleep(10);
-//     // STATUS = 2
-//     for (int i = 0; i < max_childs; i++) {
-//       if (childs[i] != -1) {
-//         kill(childs[i], SIGTERM);
-//         // tengo que ended_output
-//         end_output(childs[i], 2);
-//         actual_status[i] = "FINISHED";
-//         // childs[i] = -1; // esto tampoco debería ser así...
-//       }
-//   }
-// }
-
 void handle_sigtstp(int signal){
-    // time_reached = true;
     printf("SE APRETO CTRL + Z\n");
     // Terminamos los procesos
     for (int i = 0; i < max_childs; i++) {
@@ -208,6 +180,7 @@ void handle_sigtstp(int signal){
     // Si no terminaron, los matamos
     // int status;
     for (int i = 0; i < max_childs; i++) {
+        // int status;
         if (childs[i] != -1) {
             // int exit_status = WTERMSIG(status);
             // end_output(childs[i], exit_status); // ESTATUS DE CONTROL Z
@@ -224,6 +197,7 @@ void handle_sigtstp(int signal){
 }
 
 // GENERAR OUTPUT
+
 void init_output(int index, char* path, int pid) {
     printf("INIT_OUTPUT\n");
     char* program_name = malloc((strlen(path) + 1) * sizeof(char));
@@ -233,7 +207,6 @@ void init_output(int index, char* path, int pid) {
 }
 
 void end_output(int pid, int status) {
-    // time_t time = time()
     int index;
     for (int i = 0; i < N_process; i++) {
         if (p_pids[i] == pid) {
@@ -250,35 +223,26 @@ void end_output(int pid, int status) {
 void generete_output() {
     printf("\nLLEGUE A GENERAR EL OUTPUT\n");
     for (int i = 0; i < N_process; i++) {
+        printf("Proceso %d\n", i);
         if (p_path[i] !=  NULL) {
+            printf("ESTATUS ACTUAL: %s\n", actual_status[i]);
             if (strcmp(actual_status[i], "FINISHED") != 0) {
-                printf("\nEl procesos termina en generar output\n");
+                printf("El procesos termina en generar output\n");
                 int status;
                 waitpid(childs[i], &status, 0);
                 end_time[i] = GetTime();
                 p_status[i] = WEXITSTATUS(status);
-
+                printf("\n");
             }
-            printf("proceso %s\nstatus %d\n", p_path[i], p_status[i]);
             int total_time = (int)(end_time[i] - start_time[i]);
-            fprintf(output_file, "%s,%d,%d", p_path[i], total_time, p_status[i]); 
+            // double total_time = (end_time[i] - start_time[i]);
+            fprintf(output_file, "%s,%d,%d\n", p_path[i], total_time, p_status[i]); 
+            // printf("proceso %s\nstatus %d\n", p_path[i], p_status[i]);
         }
     }
     printf("GENERAR OUTPUT FIN\n");
     printf("\n");
 }
-
-
-// ESPACIO DISPONIBLE
-int available_space() {
-  for (int i = 0; i < max_childs; i++) {
-    if (childs[i] == -1) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 
 // MANEJAR ARGUMENTOS
 void split_string(char* string, char* delimiter, char** result) {
@@ -302,6 +266,15 @@ double GetTime() {
     return (double)t.tv_sec + (double)t.tv_usec/1e6;
 }
 
+// ESPACIO DISPONIBLE
+// int available_space() {
+//   for (int i = 0; i < max_childs; i++) {
+//     if (childs[i] == -1) {
+//       return i;
+//     }
+//   }
+//   return -1;
+// }
 
 // LIBERAR MEMORIA
 void free_memory() {

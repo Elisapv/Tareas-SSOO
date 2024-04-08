@@ -3,6 +3,7 @@
 #include <stdlib.h> // malloc, calloc, free, etc
 #include <stdbool.h> // bool, true, false
 #include <time.h>
+#include <sys/time.h> 
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -19,7 +20,6 @@ int* childs;
 int cont_childs;
 int max_childs;
 char** arguments;
-// bool time_reached; // tiempo alcanzado
 FILE* output_file;
 
 
@@ -36,7 +36,7 @@ int N_process;
 
 void handle_process(int n_argument, char* path, int index);
 void split_string(char* string, char* delimiter, char** result);
-int available_space();
+// int available_space();
 
 // Wait
 void wait_child();

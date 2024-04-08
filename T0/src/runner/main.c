@@ -8,8 +8,6 @@ int main(int argc, char const *argv[])
 	signal(SIGALRM, handle_sigalrm);
 	signal(SIGTSTP, handle_sigtstp);
 
-	// time_reached = false; // revisar
-
 	/*Lectura del input*/
 
 	//argc corresponde número de cosas en el comando que corremos
