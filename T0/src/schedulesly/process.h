@@ -1,22 +1,39 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio.h>	// FILE, fopen, fclose, etc.
+#include <stdlib.h> // malloc, calloc, free, etc
+#include <string.h> 
+#include "../file_manager/manager.h"
 
 typedef enum { READY, RUNNING, WAITING, FINISHED } State;
 
-typedef struct ChildProcess {
-    int CI;  // Tiempo de CPU antes de posiblemente crear a su hijo
-    int NH;  // Número de hijos
-    // Incluir más parámetros necesarios para cada hijo
-} ChildProcess;
-
 typedef struct Process {
-    int PID;        
-    int PPID;       
-    int GID;        
-    State state;    
-    int TI;         
-    int CI;         
-    int NH;         
-    ChildProcess* children;  // Arreglo de hijos
-    int childrenCount;       // Contador de hijos
+    int PID;
+    int PPID;
+    int GID;
+    State state;
+    int TI;
+    int CI;
+    int CF;
+    int NH;
+    int* CE;
+    struct Process* children;       // Arreglo de hijos
+    struct Process* father;         // Puntero a mi papá
+    // int childrenCount;           // Contador de hijos
 } Process;
+
+typedef struct Parent {
+    Process* process;
+    struct Parent* next;
+    struct Parent* previous;
+} Parent;
+
+// VARIABLES Y ARREGLOS GLOABLES
+int N_PROCESSES;
+Process* all_parents;
+int q_start;
+int q_delta;
+int q_min;
+
+
+//Funciones
+int search_index_children(Process* parent);
+void print_process(Process* proc);

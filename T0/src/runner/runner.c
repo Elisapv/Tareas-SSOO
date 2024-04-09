@@ -76,7 +76,7 @@ void handle_process(int n_argument, char* path, int index){
 // WAIT
 
 void wait_child() {
-    printf("\nENTRE A WAIT_CHILD\n");
+    // printf("\nENTRE A WAIT_CHILD\n");
     int status;
     for (int index = 0; index < N_process; index++) {
         if (p_pids[index] > 0 && strcmp(actual_status[index], "FINISHED") != 0) {
@@ -190,7 +190,7 @@ void handle_sigtstp(int signal){
             actual_status[i] = "FINISHED";
         }
     }
-    generete_output();
+    generete_output(); // esto no se si tiene que ser acá, o hay que ponerle un booleano
     free_memory();
     free(arguments);
     exit(0);
@@ -226,22 +226,42 @@ void generete_output() {
         printf("Proceso %d\n", i);
         if (p_path[i] !=  NULL) {
             printf("ESTATUS ACTUAL: %s\n", actual_status[i]);
-            if (strcmp(actual_status[i], "FINISHED") != 0) {
-                printf("El procesos termina en generar output\n");
-                int status;
-                waitpid(childs[i], &status, 0);
-                end_time[i] = GetTime();
-                p_status[i] = WEXITSTATUS(status);
-                printf("\n");
-            }
+            // if (strcmp(actual_status[i], "FINISHED") != 0) {
+            //     printf("El procesos termina en generar output\n");
+            //     int status;
+            //     waitpid(p_pids[i], &status, 0);
+            //     // pid_t final_pid = waitpid(childs[i], &status, 0);
+            //     // if (final_pid > 0) {
+            //     end_time[i] = GetTime();
+            //     p_status[i] = WEXITSTATUS(status);
+            //     actual_status[i] = "FINISHED";
+            //     // }
+            // }
             int total_time = (int)(end_time[i] - start_time[i]);
-            // double total_time = (end_time[i] - start_time[i]);
             fprintf(output_file, "%s,%d,%d\n", p_path[i], total_time, p_status[i]); 
             // printf("proceso %s\nstatus %d\n", p_path[i], p_status[i]);
         }
     }
     printf("GENERAR OUTPUT FIN\n");
     printf("\n");
+}
+
+// CHEQUEAR
+void check_processes() {
+    while (1) {
+        int all_finished = 1;
+        for (int i = 0; i < N_process; i++) {
+            if (strcmp(actual_status[i], "FINISHED") != 0) {
+                all_finished = 0;
+                wait_child();
+                break;
+            }
+        }
+        if (all_finished) {
+            break;
+        }
+        sleep(1);
+    }
 }
 
 // MANEJAR ARGUMENTOS

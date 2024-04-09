@@ -36,6 +36,7 @@ int N_process;
 
 void handle_process(int n_argument, char* path, int index);
 void split_string(char* string, char* delimiter, char** result);
+void check_processes();
 // int available_space();
 
 // Wait

@@ -1,0 +1,9 @@
+8
+1 ./testsT0/P1/bin/childfaulter childfaulter
+4 ./testsT0/P1/bin/childtime childtime 6 SSOO 31
+1 ./testsT0/P1/bin/child child 
+-1 wait_all 5
+4 ./testsT0/P1/bin/childtime childtime 9 REDES 67
+-1 wait_all 2
+1 ./testsT0/P1/bin/child child 
+4 ./testsT0/P1/bin/childtime childtime 2 SSOOyREDES 22
