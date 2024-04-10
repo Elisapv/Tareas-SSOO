@@ -226,17 +226,17 @@ void generete_output() {
         printf("Proceso %d\n", i);
         if (p_path[i] !=  NULL) {
             printf("ESTATUS ACTUAL: %s\n", actual_status[i]);
-            // if (strcmp(actual_status[i], "FINISHED") != 0) {
-            //     printf("El procesos termina en generar output\n");
-            //     int status;
-            //     waitpid(p_pids[i], &status, 0);
-            //     // pid_t final_pid = waitpid(childs[i], &status, 0);
-            //     // if (final_pid > 0) {
-            //     end_time[i] = GetTime();
-            //     p_status[i] = WEXITSTATUS(status);
-            //     actual_status[i] = "FINISHED";
-            //     // }
-            // }
+            if (strcmp(actual_status[i], "FINISHED") != 0) {
+                printf("El procesos termina en generar output\n");
+                int status;
+                waitpid(p_pids[i], &status, 0);
+                // pid_t final_pid = waitpid(childs[i], &status, 0);
+                // if (final_pid > 0) {
+                end_time[i] = GetTime();
+                p_status[i] = WEXITSTATUS(status);
+                actual_status[i] = "FINISHED";
+                // }
+            }
             int total_time = (int)(end_time[i] - start_time[i]);
             fprintf(output_file, "%s,%d,%d\n", p_path[i], total_time, p_status[i]); 
             // printf("proceso %s\nstatus %d\n", p_path[i], p_status[i]);

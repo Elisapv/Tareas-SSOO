@@ -4,7 +4,10 @@ int main(int argc, char const *argv[])
 {
 	/*Lectura del input: ./testsT0/P2/inputs/in01.txt */
 	char *file_name = (char *)argv[1];
+	char *file_output = (char *)argv[2];
+
 	InputFile *input_file = read_file(file_name);
+	output_file = fopen(file_output, "w");
 
 	N_PROCESSES = input_file->len;
 
@@ -212,13 +215,12 @@ int main(int argc, char const *argv[])
 		// liberar memoria de previous y de actual
 	}
 
-	for (int k = 1; k < N_PROCESSES; k++) {
-		printf("\nPARTO MOSTRANDO UN PROCESO\n");
-		print_process(&all_parents[k-1]);
-	}
+	// for (int k = 1; k < N_PROCESSES; k++) {
+	// 	printf("\nPARTO MOSTRANDO UN PROCESO\n");
+	// 	print_process(&all_parents[k-1]);
+	// }
 
-	scheduler(all_parents);
-	// empezar la tarea!!!!
+	scheduler();
 
 	input_file_destroy(input_file);
 }

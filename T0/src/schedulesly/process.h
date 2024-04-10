@@ -6,7 +6,12 @@
 #include <assert.h>
 #include "../file_manager/manager.h"
 
-typedef enum { READY, RUNNING, WAITING, FINISHED } State;
+typedef enum { 
+    READY, 
+    RUNNING, 
+    WAITING, 
+    FINISHED 
+} State;
 
 typedef struct Process {
     int PID;
@@ -23,6 +28,7 @@ typedef struct Process {
     int pos_CI;
     int num_prog_group;
     int TI;
+    int cpu_burst;
     int q_start;
     int q_delta;
     int q_min;
@@ -41,6 +47,9 @@ struct Process* all_parents;
 int q_start;
 int q_delta;
 int q_min;
+int total_time;
+
+FILE* output_file;
 
 
 //Funciones Lectura Input
@@ -49,6 +58,10 @@ int search_index_ce(Process* parent);
 void print_process(Process* proc);
 
 //Funciones Scheduler
-void scheduler(Process* all_parents);
-void manegeQueue(int index);
+void scheduler();
+void manegeQueue(Process* queque, int index);
+Process* search_father(Process* process);
+int search_children(Process* parent);
+void final_report(Process* process);
+char* find_state(int index);
 // double GetTime();

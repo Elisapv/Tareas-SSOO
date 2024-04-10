@@ -74,7 +74,7 @@ int main(int argc, char const *argv[])
 		}
 		printf("########################\n");
 		// printf("\n");
-		check_processes();
+		// check_processes();
 		handle_process(argc, instruction, i);
 		// número de argumentos de proceso, path+argumentos, indice del proceso.
 		printf("childs_count: %d\n", cont_childs);
