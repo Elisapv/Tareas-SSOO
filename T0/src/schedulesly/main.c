@@ -7,11 +7,9 @@ int main(int argc, char const *argv[])
 	char *file_output = (char *)argv[2];
 
 	InputFile *input_file = read_file(file_name);
-	output_file = fopen(file_output, "rb");
+	output_file = fopen(file_output, "w");
 
 	N_PROCESSES = input_file->len;
-
-	// all_parents = malloc(sizeof(Process) * N_PROCESSES);
 
 	printf("K líneas: %d\n", input_file->len);
 	printf("qstart: %d - qdelta: %d - qmin: %d\n", atoi(input_file->lines[0][0]), atoi(input_file->lines[0][1]), atoi(input_file->lines[0][2]));
@@ -19,7 +17,7 @@ int main(int argc, char const *argv[])
 	q_delta = atoi(input_file->lines[0][1]);
 	q_min = atoi(input_file->lines[0][2]);
 
-	all_parents = malloc(sizeof(Process) * N_PROCESSES);
+	all_parents = malloc(sizeof(Process) * (N_PROCESSES));
 	for (int i = 0; i < N_PROCESSES; i++) {
 		all_parents[i].PID = -1;
 		all_parents[i].PPID = -1;
@@ -31,7 +29,7 @@ int main(int argc, char const *argv[])
 		all_parents[i].CF = -1;
 		all_parents[i].children = NULL;
 		all_parents[i].CE = NULL;
-		all_parents[i].father = NULL; // es que no tiene papá
+		all_parents[i].father = NULL;
 		all_parents[i].q_start = q_start;
 		all_parents[i].q_delta = q_delta;
 		all_parents[i].q_min = q_min;
@@ -41,17 +39,17 @@ int main(int argc, char const *argv[])
 	Process* previous;
 
 	Parent* actual_father;
-	Parent* previous_father;
+	// Parent* previous_father;
 	int pid = 1; 
 
 
 	for (int i = 1; i < input_file->len; ++i)
 	{
-		printf("\n");
-		printf("PRICIPIO DEL FOR\n");
+		// printf("\n");
+		// printf("PRICIPIO DEL FOR\n");
 		int cont_childs = atoi(input_file->lines[i][2]);
 		int index_file = 2;
-		int num_prog_group = 1; // asumo que está el padre
+		int num_prog_group = 1;
 
 		int cont = 0; // ppid, ce, children // pero eso afecta a los ppdis?
 		printf("TI: %d - CI: %d - NH: %d\n", atoi(input_file->lines[i][0]), atoi(input_file->lines[i][1]), atoi(input_file->lines[i][2]));
@@ -87,7 +85,7 @@ int main(int argc, char const *argv[])
 		newFather -> process = &(all_parents[i-1]);
 		newFather -> previous = NULL;
 		actual_father = newFather;
-		previous_father = NULL;
+		// previous_father = NULL;
 		
 		cont++;
 		previous = &(all_parents[i-1]);
@@ -121,13 +119,13 @@ int main(int argc, char const *argv[])
 				actual->TI = -1;
 
 				if (actual->NH == 0){ // No tiene hijos
-					printf("ACTUAL->NH: %d\n", actual->NH );
+					// printf("ACTUAL->NH: %d\n", actual->NH );
 
 					index_file++;
 					actual->CF = atoi(input_file->lines[i][index_file]);
 	
 					if (previous->NH > 1) {
-						printf("TI: %d\n", previous->TI);
+						// printf("TI: %d\n", previous->TI);
 						int index_CE = search_index_ce(previous);
 						if (index_CE != -1) {
 							// Significa que hay Ce que rellenas
@@ -166,14 +164,12 @@ int main(int argc, char const *argv[])
 				} else {
 					// Acá tengo hijos
 					// Lo agregamos a la lista ligada de los padres para despues asignarle su CF
-					printf("ENTRE ACÁ\n");
-
 					Parent *newParent = malloc(sizeof(Parent));
 					newParent->process = actual;
 					newParent->previous = actual_father;
 					newParent->next = NULL;
 
-					previous_father = actual_father;
+					// previous_father = actual_father;
 					actual_father = newParent,
 
 					// Tengo hijos
@@ -188,18 +184,19 @@ int main(int argc, char const *argv[])
 					previous = actual;
 					actual = &actual->children[0];
 					actual->father = previous;
+					// free(newParent);
 
 				}
 				cont_childs--; // un hijo acaba de guardarse
-				printf("CONT_CHILDS AL FINAL DE UN LOOP: %d\n", cont_childs);
+				// printf("CONT_CHILDS AL FINAL DE UN LOOP: %d\n", cont_childs);
 				cont++;
 			}
 
 			// CF's // Recorrer la lista mientras el puntero actual no sea nulo
-			printf("PARTO RELLENANDO LOS CF DE LOS PADRES\n");
+			// printf("PARTO RELLENANDO LOS CF DE LOS PADRES\n");
 			
 			if (actual_father->previous == NULL) {
-				printf("ACTUAL FATHER NULL\n");
+				// printf("ACTUAL FATHER NULL\n");
 				actual_father->process->CF =  atoi(input_file->lines[i][index_file]);
 			} else {
 				while (actual_father->previous != NULL) {
@@ -215,6 +212,7 @@ int main(int argc, char const *argv[])
 		}
 
 		all_parents[i-1].num_prog_group = num_prog_group;
+		free(newFather);
 		// liberar memoria de previous y de actual
 	}
 
@@ -224,13 +222,8 @@ int main(int argc, char const *argv[])
 	}
 
 	scheduler();
-	printf("ALOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
 	
 	// Liberar memoria
-	free(actual);
-	free(previous);
-	free(actual_father);
-	free(previous_father);
 	free_memory();
 
 	input_file_destroy(input_file);

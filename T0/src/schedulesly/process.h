@@ -65,6 +65,7 @@ void manegeQueue(int index);
 Process* search_father(Process* process);
 int search_children(Process* parent);
 void final_report(Process* process);
+// void final_report(Process* process, int index);
 char* find_state(int index);
 // double GetTime();
 

@@ -2,26 +2,29 @@
 
 // FUNCIONES SHEDULER
 void scheduler() {
+  printf("HOLA\n");
   // Para manejar los TI
-  queue = malloc(sizeof(Process*) * ((N_PROCESSES - 1))); // LIBERAR MEMORIA
+  queue = malloc(sizeof(Process) * ((N_PROCESSES - 1))); // LIBERAR MEMORIA
   int cont_queue = 0;
-  bool waitings = time(NULL);
-  time_t start_time = time(NULL);
+  bool waitings = true;
+  // time_t start_time = time(NULL);
+  double time = (double) clock() / (double)CLOCKS_PER_SEC;
 
   while (waitings) {
 
-    time_t current_time = time(NULL);
-    double elapsed_time = difftime(current_time, start_time);
+    // time_t current_time = time(NULL);
+    // double elapsed_time = difftime(current_time, start_time);
 
     for (int i = 0; i < (N_PROCESSES - 1); i++){
       // printf(" TI: %d vs time: %f\n", all_parents[i]->TI, elapsed_time);
-      if ((double)all_parents[i].TI <= elapsed_time){
+      if ((double)all_parents[i].TI <= time){
         all_parents[i].state = READY;
         queue[cont_queue] = all_parents[i]; // podría hacer queque un puntero de punteros...
         // Acá tenemos que llamar a otra función para que los procesos pasen a RUNNIG
         if (all_parents[i].TI > 0) {
           fprintf(output_file, "IDLE %d\n", all_parents[i].TI);
         }
+        printf("Me voy...\n");
         manegeQueue(cont_queue);
         printf("vuelvo scheduler\n");
         cont_queue++;
@@ -31,26 +34,23 @@ void scheduler() {
         break;
       }
     }
+    time += (double)clock()/(double)CLOCKS_PER_SEC;
   }
 
   printf("SALGO DE ESTE LOOP DE PROCESOS PADRES\n");
 
   // Reporte final
-  printf("termina\n");
 
   fprintf(output_file, "REPORT START\n");
   fprintf(output_file, "TIME %d\n", total_time);
   for (int k = 0; k < (N_PROCESSES - 1); k++) {
-    printf("entra al for\n");
     // printf("k: %d vs N_PROCESES-1: %d\n", k, (N_PROCESSES -1));
-    fprintf(output_file, "GROUP %d %d\n", all_parents[k].GID, all_parents[k].num_prog_group);
+    // printf("QUEUE GID: %d\n", queue[k].GID);
+    fprintf(output_file, "GROUP %d %d\n", queue[k].GID, all_parents[k].num_prog_group);
 		final_report(&(all_parents[k]));
-    printf("volvi de report\n");
-    printf("k: %d N_Processes-1: %d:,\n", k, (N_PROCESSES - 1));
+    // printf("k: %d N_Processes-1: %d:,\n", k, (N_PROCESSES - 1));
 	}
-  printf("Sali del for\n");
   fprintf(output_file, "REPORT END\n"); 
-  printf("QUE ESTA PASANDO ACA\n");
 }
 
 void manegeQueue(int index) {
@@ -67,6 +67,7 @@ void manegeQueue(int index) {
     if (actual->NH == 0) {
       // No tengo hijos o no me quedan hijos // Termino mi ejecución
       actual->state = FINISHED;
+      all_parents[index].state = FINISHED;
       actual->GID = 0;
       total_time += actual->CI; // Siempre sumo mi CI
       actual->CI = -1;          // Ya vi este CI asi que lo hago -1
@@ -114,8 +115,7 @@ void manegeQueue(int index) {
         // No tengo que buscar al papa anterior que le queden hijos??
         int index_children = search_children(actual->father);
         if (index_children == -1) {
-          /*mi papá no le quedan hijos*/
-          // revisar al papa de mi papá
+          /*mi papá no le quedan hijos*/    // revisar al papa de mi papá
           if (actual->father->father == NULL) {printf("SOY EL PARENT\n");/*soy el papa original*/}
           else {actual = actual->father;} // tengo que revisar al papa
         } else { 
@@ -137,7 +137,6 @@ void manegeQueue(int index) {
   }
   printf("Sali del while\n");
   queue[index].cpu_burst = total_time;
-  free(actual);
 }
 
 int search_children(Process* parent) {
@@ -171,10 +170,13 @@ void final_report(Process* process){
     return;
   }
   char* status = find_state(process->state);
+  // char* status = find_state(all_parents[index]->state);
   fprintf(output_file, "PROGRAM %d %d %d %s %d\n", process->PID, process->PPID, process->GID, status, process->cpu_burst);
   printf("NH: %d\n", process->NH);
-  for (int i = 0; i < process->NH; i++) {
-    final_report(&process->children[i]);
+  if (process->NH > 0) {
+    for (int i = 0; i < process->NH; i++) {
+        final_report(&(process->children[i]));
+    }
   }
   printf("Salir de Final_Report\n");
 }
@@ -239,12 +241,11 @@ void print_process(Process* process) {
 
 
 void free_memory() {
-	for (int i = 0; i < (N_PROCESSES-1); i++) {
+	for (int i = 0; i < (N_PROCESSES); i++) {
     free(all_parents[i].children);
-    free(all_parents[i].father);
     free(all_parents[i].CE);
 	}
-  free(queue);
 	free(all_parents);
+  free(queue);
   fclose(output_file);
 }
