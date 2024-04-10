@@ -10,14 +10,18 @@ typedef struct Process {
     int PPID;
     int GID;
     State state;
-    int TI;
     int CI;
     int CF;
     int NH;
     int* CE;
     struct Process* children;       // Arreglo de hijos
     struct Process* father;         // Puntero a mi papá
-    // int childrenCount;           // Contador de hijos
+    // Estas solo las tiene el padre
+    int TI;
+    int q_start;
+    int q_delta;
+    int q_min;
+
 } Process;
 
 typedef struct Parent {
@@ -34,6 +38,10 @@ int q_delta;
 int q_min;
 
 
-//Funciones
+//Funciones Lectura Input
 int search_index_children(Process* parent);
+int search_index_ce(Process* parent);
 void print_process(Process* proc);
+
+//Funciones Scheduler
+void scheduler(Process* all_parents);
