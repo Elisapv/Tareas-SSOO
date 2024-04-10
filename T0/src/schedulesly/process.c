@@ -12,13 +12,13 @@ void scheduler() {
       printf(" TI: %d vs time: %f\n", all_parents[i].TI, time);
       if ((double)all_parents[i].TI <= time){
         all_parents[i].state = READY;
-        queue[cont_queue] = all_parents[i];
+        queue[cont_queue] = &(all_parents[i]);
         // Acá tenemos que llamar a otra función para que los procesos pasen a RUNNIG
         if (all_parents[i].TI > 0) {
           fprintf(output_file, "IDLE %d\n", all_parents[i].TI);
         }
         printf("TIENE QUE INICIAR LA EJECUACIÓN DEL GRUPO\n");
-        // manegeQueue(queue, cont_queue);
+        manegeQueue(queue, cont_queue);
         cont_queue++;
       }
       if (cont_queue >= (N_PROCESSES - 1)){
@@ -33,21 +33,13 @@ void scheduler() {
   fprintf(output_file, "TIME %d\n", total_time);
   for (int k = 0; k < (N_PROCESSES -1); k++) {
     // este tiene que cambiar a all_parents....
-    fprintf(output_file, "GROUP %d %d\n", queue[k].GID, queue[k].num_prog_group);
-		final_report(&queue[k]);
+    fprintf(output_file, "GROUP %d %d\n", all_parents[k].GID, all_parents[k].num_prog_group);
+		final_report(&all_parents[k]);
 	}
   fprintf(output_file, "REPORT END\n"); 
 }
 
-void manegeQueue(Process* queue, int index) { // Según yo debería ser una lista ligada
-  /*ESCRIBIR EN OUTPUT
-    0. ENTER <PID> <PPID> <GID> TIME (tiempo actual = TI) LINE <NUM_LINE> (posicion + 1 en all_parents) ARG <NUM_ARGS> ()
-    Si entre al SO, ahora estoy en la file en estado READY.
-    1. RUN <PID> <TIEMPO_TRABAJADO>
-    2. Si no alcanzo a terminar vuelve a estado WAITING: WAIT <PID>
-    3. Si un proceso vuelve al estado READY: RESUME <PID>
-    3. SI TERMINA SU EJECUCIÓN: END <PID> TIME <TIEMPO_ACTUAL_SO>
-  */
+void manegeQueue(Process* queue, int index) {
   // double time = 0; // tiempo en la CPU, esperando hijos
   int cont_prog = 0;
   total_time = queue[index].TI;
@@ -71,6 +63,7 @@ void manegeQueue(Process* queue, int index) { // Según yo debería ser una list
       actual->CI = -1;          // Ya vi este CI asi que lo hago -1
       // Tengo que ir a verificar mi Padre
       fprintf(output_file, "RUN %d %d\n", actual->PID, total_time); // no siempre depende de q's ESTO NO VA ACÁ.
+      // if (actual)
       int index_children = search_children(actual->father); //me devuelve el indice
       // si es que index_children == -1 no le quedan hijos a mi father
       // si es que index_children != -1 le quedan hijos a mi father
@@ -80,10 +73,13 @@ void manegeQueue(Process* queue, int index) { // Según yo debería ser una list
         actual = &(actual->children[index_children]); // voy al siguiente hijo
 
       } else {
-          actual = search_father(actual->father->father); // DEVUELVE EL PRIMER HIJO DISPONIBLE, SE SUPONE.
-          if (actual == NULL) {
-            printf("DESPUES DE ESTO NO DEBERÍA ENTRAR DE NUEVO AL WHILE\n");
-            // break;
+          if (actual->father == NULL ) {printf("DESPUES DE ESTO NO DEBERÍA ENTRAR DE NUEVO AL WHILE\n");}
+          else {
+            actual = search_father(actual->father->father); // DEVUELVE EL PRIMER HIJO DISPONIBLE, SE SUPONE.
+            if (actual == NULL) {
+              printf("DESPUES DE ESTO NO DEBERÍA ENTRAR DE NUEVO AL WHILE\n");
+              // break;
+            }
           }
       }
       cont_prog++;
@@ -147,6 +143,10 @@ void manegeQueue(Process* queue, int index) { // Según yo debería ser una list
 
 
 int search_children(Process* parent) {
+  if (parent == NULL) {
+    printf("QUE PASO?\n");
+    return -1;
+  }
   for (int i = 0; i < parent->NH; i++) {
     if (parent->children[i].CI != -1) {
       return i;
