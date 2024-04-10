@@ -1,6 +1,9 @@
 #include <stdio.h>	// FILE, fopen, fclose, etc.
 #include <stdlib.h> // malloc, calloc, free, etc
+#include <stdbool.h>
 #include <string.h> 
+#include <time.h>
+#include <assert.h>
 #include "../file_manager/manager.h"
 
 typedef enum { READY, RUNNING, WAITING, FINISHED } State;
@@ -17,6 +20,8 @@ typedef struct Process {
     struct Process* children;       // Arreglo de hijos
     struct Process* father;         // Puntero a mi papá
     // Estas solo las tiene el padre
+    int pos_CI;
+    int num_prog_group;
     int TI;
     int q_start;
     int q_delta;
@@ -32,7 +37,7 @@ typedef struct Parent {
 
 // VARIABLES Y ARREGLOS GLOABLES
 int N_PROCESSES;
-Process* all_parents;
+struct Process* all_parents;
 int q_start;
 int q_delta;
 int q_min;
@@ -45,3 +50,5 @@ void print_process(Process* proc);
 
 //Funciones Scheduler
 void scheduler(Process* all_parents);
+void manegeQueue(int index);
+// double GetTime();

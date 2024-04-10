@@ -48,11 +48,13 @@ int main(int argc, char const *argv[])
 		printf("PRICIPIO DEL FOR\n");
 		int cont_childs = atoi(input_file->lines[i][2]);
 		int index_file = 2;
+		int num_prog_group = 1; // asumo que está el padre
 
 		int cont = 0; // ppid, ce, children // pero eso afecta a los ppdis?
 		printf("TI: %d - CI: %d - NH: %d\n", atoi(input_file->lines[i][0]), atoi(input_file->lines[i][1]), atoi(input_file->lines[i][2]));
 		all_parents[i-1].TI = atoi(input_file->lines[i][0]);
 		all_parents[i-1].CI = atoi(input_file->lines[i][1]);
+		all_parents[i-1].pos_CI = 1;
 		all_parents[i-1].NH = atoi(input_file->lines[i][2]);
 		all_parents[i-1].children = malloc(sizeof(Process) * (all_parents[i-1].NH));
 		// Agregando los PIDS y GIDS
@@ -86,6 +88,7 @@ int main(int argc, char const *argv[])
 		previous = &all_parents[i-1];
 
 		if (all_parents[i-1].NH != 0) {
+			num_prog_group += all_parents[i-1].NH;
 			int index_children = search_index_children(previous);
 			actual = &(all_parents[i-1].children[index_children]);
 			// printf("QUE PROCESO SOY EN EL ARRAY DE HIJOS: %d\n", cont-1);
@@ -103,6 +106,7 @@ int main(int argc, char const *argv[])
 
 				index_file++;
 				actual->CI = atoi(input_file->lines[i][index_file]);
+				actual->pos_CI = index_file;
 				// printf("CI: %d\n", actual->CI);
 
 				index_file++;
@@ -168,6 +172,7 @@ int main(int argc, char const *argv[])
 
 					// Tengo hijos
 					cont_childs += actual->NH;
+					num_prog_group += actual->NH;
 					// Guardamos el espacio en la memoria para los hijos del proceso y para los CE
 					actual->children = malloc(sizeof(Process) * (actual->NH));
 					if (actual->NH > 1) {
@@ -202,6 +207,8 @@ int main(int argc, char const *argv[])
 		} else {
 			all_parents[i-1].CF = atoi(input_file->lines[i][3]);
 		}
+
+		all_parents[i-1].num_prog_group = num_prog_group;
 		// liberar memoria de previous y de actual
 	}
 
@@ -210,9 +217,7 @@ int main(int argc, char const *argv[])
 		print_process(&all_parents[k-1]);
 	}
 
-	printf("QUE PASA??\n");
-	void scheduler(all_parents);
-	printf("ALO??\n");
+	scheduler(all_parents);
 	// empezar la tarea!!!!
 
 	input_file_destroy(input_file);
