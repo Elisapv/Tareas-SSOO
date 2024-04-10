@@ -215,12 +215,12 @@ int main(int argc, char const *argv[])
 		// liberar memoria de previous y de actual
 	}
 
-	// for (int k = 1; k < N_PROCESSES; k++) {
-	// 	printf("\nPARTO MOSTRANDO UN PROCESO\n");
-	// 	print_process(&all_parents[k-1]);
-	// }
+	for (int k = 1; k < N_PROCESSES; k++) {
+		printf("\nPARTO MOSTRANDO UN PROCESO\n");
+		print_process(&all_parents[k-1]);
+	}
 
-	scheduler();
+	// scheduler();
 
 	input_file_destroy(input_file);
 }
