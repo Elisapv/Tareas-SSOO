@@ -44,6 +44,7 @@ typedef struct Parent {
 // VARIABLES Y ARREGLOS GLOABLES
 int N_PROCESSES;
 struct Process* all_parents;
+struct Process* queue;
 int q_start;
 int q_delta;
 int q_min;
@@ -59,9 +60,13 @@ void print_process(Process* proc);
 
 //Funciones Scheduler
 void scheduler();
-void manegeQueue(Process* queque, int index);
+// void manegeQueue(Process** queque, int index);
+void manegeQueue(int index);
 Process* search_father(Process* process);
 int search_children(Process* parent);
 void final_report(Process* process);
 char* find_state(int index);
 // double GetTime();
+
+// Liberar Memoria
+void free_memory();

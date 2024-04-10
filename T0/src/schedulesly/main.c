@@ -7,7 +7,7 @@ int main(int argc, char const *argv[])
 	char *file_output = (char *)argv[2];
 
 	InputFile *input_file = read_file(file_name);
-	output_file = fopen(file_output, "w");
+	output_file = fopen(file_output, "rb");
 
 	N_PROCESSES = input_file->len;
 
@@ -74,21 +74,24 @@ int main(int argc, char const *argv[])
 			}
 		}
 
+
 		// RECORRER SUS HIJOS Y PONERLE -1
 		for (int q = 0; q < all_parents[i-1].NH; q++){
 			all_parents[i-1].children[q].CI = -1;
 		}
 
-		all_parents[i-1].PPID = cont; // preguntar
+
+		all_parents[i-1].PPID = cont;
 		// HAY QUE AGREGAR AL PADRE A LA LISTA LIGADA DE PARENTS PARA DESPUES ASIGNARLE SU CF
 		Parent *newFather = malloc(sizeof(Parent));
-		newFather -> process = &all_parents[i-1];
+		newFather -> process = &(all_parents[i-1]);
 		newFather -> previous = NULL;
 		actual_father = newFather;
 		previous_father = NULL;
 		
 		cont++;
-		previous = &all_parents[i-1];
+		previous = &(all_parents[i-1]);
+
 
 		if (all_parents[i-1].NH != 0) {
 			num_prog_group += all_parents[i-1].NH;
@@ -217,10 +220,18 @@ int main(int argc, char const *argv[])
 
 	for (int k = 1; k < N_PROCESSES; k++) {
 		printf("\nPARTO MOSTRANDO UN PROCESO\n");
-		print_process(&all_parents[k-1]);
+		print_process(&(all_parents[k-1]));
 	}
 
-	// scheduler();
+	scheduler();
+	printf("ALOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+	
+	// Liberar memoria
+	free(actual);
+	free(previous);
+	free(actual_father);
+	free(previous_father);
+	free_memory();
 
 	input_file_destroy(input_file);
 }
